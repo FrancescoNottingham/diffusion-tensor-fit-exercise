@@ -56,7 +56,7 @@ def calculate_C_vals(data,s0_value,x,y,z):
     '''
 
     C_vals = np.zeros(data.shape[-1])
-    if s0[x,y,z] == 0:
+    if s0_value == 0:
         return C_vals
     else:
         for i in np.arange(0,data.shape[-1]):
