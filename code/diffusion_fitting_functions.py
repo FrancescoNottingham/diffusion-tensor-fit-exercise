@@ -136,7 +136,7 @@ def diffusion_tensor_fit(diffusion_data,brain_mask,bvals,bvecs):
                 else:
                     s0_value = get_s0_value(s0,x,y,z)
                     timeseries_no0, bvals_no0, bvecs_no0 = extract_non0_data(diffusion_data_no_b0,bvals_no_b0,bvecs_no_b0, x,y,z)
-                    if timeseries_no0.size < 7:
+                    if timeseries_no0.size < 6:
                         fractional_anisotropy[x,y,z] = 0
                     else:
                         diffusion_tensor_values = calculate_diffusion_values(timeseries_no0,s0_value,bvals_no0,bvecs_no0)
