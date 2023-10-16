@@ -12,3 +12,9 @@ brain_mask = brain_mask_img.get_fdata()
 diffusion_data = diffusion_data_img.get_fdata()
 
 fractional_anisotropy = dff.diffusion_tensor_fit(diffusion_data,brain_mask,bvals,bvecs)
+
+empty_header = nib.Nifti1Header()
+
+nifti_FA = nib.Nifti1Image(fractional_anisotropy, diffusion_data_img.affine, empty_header)
+
+nib.save(nifti_FA, 'FA_result.nii.gz')
