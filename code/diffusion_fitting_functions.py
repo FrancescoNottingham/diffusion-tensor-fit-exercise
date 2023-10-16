@@ -110,15 +110,27 @@ def calculate_fractional_anisotropy(evals):
 
     return np.sqrt(1-(l_1*l_2 + l_2*l_3 + l_3*l_1)/(l_1**2 + l_2**2 + l_3**2))
 
+def remove_b0s(data,bvals,bvecs):
+
+    index = np.nonzero(bvals)[0]
+    data = data[...,index]
+    bvals = bvals[index]
+    bvecs = bvecs[...,index]
+    
+    return data, bvals, bvecs
+
 def diffusion_tensor_fit(diffusion_data,brain_mask,bvals,bvecs):
 
     fractional_anisotropy = np.zeros(diffusion_data.shape)
 
     s0 = create_matrix_s0(diffusion_data,bvals)
     
+    diffusion_data, bvals, bvecs = remove_b0s(diffusion_data,bvals,bvecs)
+
     for x in np.arange(diffusion_data.shape[0]):
         for y in np.arange(diffusion_data.shape[1]):
             for z in np.arange(diffusion_data.shape[2]):
+
                 if brain_mask[x,y,z] == 0 or np.all(diffusion_data[x,y,z,:])==0:
                     fractional_anisotropy[x,y,z] = 0
                 else:
