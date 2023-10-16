@@ -3,13 +3,14 @@
 #importing section
 import numpy as np
 
+
 def create_bval_array(bvals):
     ''' Creates a matrix containing the b values in the correct order for manipulation in
     the A matrix in equation 2.11 of Stam's thesis
 
-    For each element in the bvals vector a row of 6 values is filled in, for example:
+    Example:
     create_bval_array([0,1,2])
-    returns
+    Returns
     [[0,0,0,0,0,0],
     [1,1,1,1,1,1],
     [2,2,2,2,2,2]]
@@ -22,9 +23,6 @@ def create_bvec_array(bvecs):
 
     For each 3D bvec (g1,g2,g3) we get the following row:
     [g1^2,g2^2,g3^2,2*g1*g2,2*g2*g3,2*g3*g1]
-
-    The function iterates over all bvecs to give a matrix which is 6 colums and N rows (number
-    of bvecs - the column number)
     '''
         
     G_values = np.array([bvecs[0,:]**2,bvecs[1,:]**2,bvecs[2,:]**2, 2*bvecs[1,:]*bvecs[0,:], 2*bvecs[2,:]*bvecs[1,:], 2*bvecs[0,:]*bvecs[2,:]])
@@ -46,11 +44,9 @@ def create_matrix_s0(data,bvals):
     return np.mean(data[...,np.where(bvals==0)[0]],axis=data.ndim-1)
 
 
-def get_s0_value(s0,x,y,z):
-    return s0[x,y,z]
-
 def remove_b0s(data,bvals,bvecs):
-
+    ''' Returns data, bvals and bvecs without volumes where bval = 0
+    '''
     index = np.nonzero(bvals)[0]
     new_data = data[...,index]
     new_bvals = bvals[index]
@@ -59,7 +55,8 @@ def remove_b0s(data,bvals,bvecs):
     return new_data, new_bvals, new_bvecs
 
 def extract_non0_data(data, bvals, bvecs, x,y,z):
-
+    ''' Returns data timeseries, bvals and bvecs without volumes where the timeseries is 0
+    '''
     timeseries_all = data[x,y,z,:]
     index = np.nonzero(timeseries_all)[0]
     timeseries = data[x,y,z,index]
@@ -120,25 +117,39 @@ def calculate_fractional_anisotropy(evals):
     return np.sqrt(1-(l_1*l_2 + l_2*l_3 + l_3*l_1)/(l_1**2 + l_2**2 + l_3**2))
 
 def diffusion_tensor_fit(diffusion_data,brain_mask,bvals,bvecs):
+    ''' Returns the fractional anisotropy for the data
+    '''
 
+    # Initiate matrix
     fractional_anisotropy = np.zeros(diffusion_data.shape[:-1])
 
+    # Find b = 0 values
     s0 = create_matrix_s0(diffusion_data,bvals)
 
+    # Remove b = 0 values from future calculations
     diffusion_data_no_b0, bvals_no_b0, bvecs_no_b0 = remove_b0s(diffusion_data,bvals,bvecs)
 
+    # loop over all voxels
     for x in np.arange(diffusion_data_no_b0.shape[0]):
         for y in np.arange(diffusion_data_no_b0.shape[1]):
             for z in np.arange(diffusion_data_no_b0.shape[2]):
-
+                
+                # Check if in brain mask
                 if brain_mask[x,y,z] == 0:
                     fractional_anisotropy[x,y,z] = 0
+
                 else:
-                    s0_value = get_s0_value(s0,x,y,z)
+                    # Get s0 value
+                    s0_value = s0[x,y,z]
+                    # Remove values where intensity is 0
                     timeseries_no0, bvals_no0, bvecs_no0 = extract_non0_data(diffusion_data_no_b0,bvals_no_b0,bvecs_no_b0, x,y,z)
+                    
+                    # Check if we have enough values to calculate diffusion tensor
                     if timeseries_no0.size < 6:
                         fractional_anisotropy[x,y,z] = 0
+                    
                     else:
+                        # Calculate fractional anisotropy
                         diffusion_tensor_values = calculate_diffusion_values(timeseries_no0,s0_value,bvals_no0,bvecs_no0)
                         evals = calculate_diffusion_eigenvalues(diffusion_tensor_values)
                         fractional_anisotropy[x,y,z] = calculate_fractional_anisotropy(evals)

@@ -2,6 +2,7 @@ import numpy as np
 import nibabel as nib
 import diffusion_fitting_functions as dff
 
+# Load data
 bvals = np.loadtxt('/home/lpxfd2/Documents/diffusion-tensor-fitting-task/task-data/bvals')
 bvecs = np.loadtxt('/home/lpxfd2/Documents/diffusion-tensor-fitting-task/task-data/bvecs')
 
@@ -11,8 +12,11 @@ brain_mask_img = nib.load('/home/lpxfd2/Documents/diffusion-tensor-fitting-task/
 brain_mask = brain_mask_img.get_fdata()
 diffusion_data = diffusion_data_img.get_fdata()
 
+# Calculate FA
 fractional_anisotropy = dff.diffusion_tensor_fit(diffusion_data,brain_mask,bvals,bvecs)
 
+
+# Save as Niftii
 empty_header = nib.Nifti1Header()
 
 nifti_FA = nib.Nifti1Image(fractional_anisotropy, diffusion_data_img.affine, empty_header)
